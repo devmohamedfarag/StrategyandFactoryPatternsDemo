@@ -1,4 +1,5 @@
-﻿using StrategyandFactroyPatternsDemo.Core;
+﻿using Microsoft.Extensions.DependencyInjection;
+using StrategyandFactroyPatternsDemo.Core;
 using StrategyandFactroyPatternsDemo.Core.DiscountStratigies;
 
 namespace StrategyandFactroyPatternsDemo
@@ -7,16 +8,18 @@ namespace StrategyandFactroyPatternsDemo
     {
         public ICustomerDiscountStrategy CreateCustomerDiscountStrategy(CustomerCategory category)
         {
-            if (category == CustomerCategory.Silver)
-            {
-                return new SilverCustomerDiscountStartegy();
-            }
-            else if (category == CustomerCategory.Gold)
-            {
-                return new GoldCustomerDiscountStartegy();
-            }
+            #region ServiceRegistration 
+            var services = new ServiceCollection();
 
-            return null;
+            services.AddTransient<ICustomerDiscountStrategy, SilverCustomerDiscountStartegy>();
+            services.AddTransient<ICustomerDiscountStrategy, GoldCustomerDiscountStartegy>();
+            services.AddTransient<ICustomerDiscountStrategy, NewCustomerDiscountStartegy>();
+            #endregion
+
+            var serviceProvider = services.BuildServiceProvider();
+            IEnumerable<ICustomerDiscountStrategy> strategies = serviceProvider.GetServices<ICustomerDiscountStrategy>();
+
+            return strategies.FirstOrDefault(s => s.IsAllowed(category));
         }
     }
 }

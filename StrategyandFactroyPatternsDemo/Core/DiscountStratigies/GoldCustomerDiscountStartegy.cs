@@ -2,9 +2,10 @@
 {
     public class GoldCustomerDiscountStartegy : ICustomerDiscountStrategy
     {
+        public bool IsAllowed(CustomerCategory customerCategory)
+          => customerCategory == CustomerCategory.Gold;
         public double CalculateDiscount(double TotalPrice)
-        {
-            return TotalPrice >= 10000? 0.1 : 0;
-        }
+          => TotalPrice >= 10000 ? 0.1 : 0;
+
     }
 }

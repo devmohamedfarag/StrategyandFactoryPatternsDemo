@@ -2,6 +2,7 @@
 {
     public interface ICustomerDiscountStrategy
     {
+        bool IsAllowed(CustomerCategory customerCategory);
         double CalculateDiscount(double TotalPrice);
     }
 }
