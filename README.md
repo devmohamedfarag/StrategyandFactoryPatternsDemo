@@ -1,12 +1,20 @@
  # Strategy & Factory Patterns Demo (C# Console Application):
-
-This project demonstrates how to combine the Strategy Pattern and Factory Pattern to build a flexible discount system for customers in a billing/invoice scenario.
+This project demonstrates how to combine the Strategy Pattern and Factory Pattern and Dependency Injection to build a flexible discount system for customers in a billing/invoice scenario.
 The application selects a discount strategy dynamically based on the customer category (New, Silver, Gold).
 
+- Instead of using multiple if/switch statements, the system uses:
+
+✔ Strategy Pattern:
+- To encapsulate each discount rule in its own separate class.
+
+✔ Factory Pattern
+- To choose which strategy to use based on the customer category.
+
+✔ Dependency Injection
+- To register and resolve all strategies automatically using Microsoft.Extensions.DependencyInjection.
 ---
 
 ## Features:
-
 - Implements the Strategy Pattern to encapsulate discount calculation logic.
 - Implements the Factory Pattern to create the right strategy for each customer category.
 - Generates invoices with:
@@ -26,6 +34,7 @@ The application selects a discount strategy dynamically based on the customer ca
 ```csharp
 public interface ICustomerDiscountStrategy
 {
+    bool IsAllowed(CustomerCategory customerCategory);
     double CalculateDiscount(double TotalPrice);
 }
 ```
@@ -35,21 +44,41 @@ Concrete strategies:
 - GoldCustomerDiscountStrategy (10% over 10,000)
 ---
  2) Factory Pattern:
-   - Used to select and instantiate the right strategy:
+   - The Factory selects the correct discount strategy based on the customer’s category:
 ```csharp
-public ICustomerDiscountStrategy CreateCustomerDiscountStrategy(CustomerCategory category)
-{
-    if (category == CustomerCategory.Silver)
-        return new SilverCustomerDiscountStrategy();
+  public class CustomerDiscountStrategyFactory
+  {
+      public ICustomerDiscountStrategy CreateCustomerDiscountStrategy(CustomerCategory category)
+      {
+          #region ServiceRegistration 
+          var services = new ServiceCollection();
 
-     else if (category == CustomerCategory.Gold)
-        return new GoldCustomerDiscountStrategy();
+          services.AddTransient<ICustomerDiscountStrategy, SilverCustomerDiscountStartegy>();
+          services.AddTransient<ICustomerDiscountStrategy, GoldCustomerDiscountStartegy>();
+          services.AddTransient<ICustomerDiscountStrategy, NewCustomerDiscountStartegy>();
+          #endregion
 
-    return new NewCustomerDiscountStrategy();
-}
+          var serviceProvider = services.BuildServiceProvider();
+          IEnumerable<ICustomerDiscountStrategy> strategies = serviceProvider.GetServices<ICustomerDiscountStrategy>();
+
+          return strategies.FirstOrDefault(s => s.IsAllowed(category));
+      }
+  }
 ```
-  - This ensures the main program never knows how strategies are created.
+  - The Factory does NOT calculate discounts — it only chooses the correct strategy.
+---
+ 3) Dependency Injection:
+    - The project uses Microsoft.Extensions.DependencyInjection to register all discount strategies at runtime.
+      ```csharp
+          #region ServiceRegistration 
+          var services = new ServiceCollection();
 
+          services.AddTransient<ICustomerDiscountStrategy, SilverCustomerDiscountStartegy>();
+          services.AddTransient<ICustomerDiscountStrategy, GoldCustomerDiscountStartegy>();
+          services.AddTransient<ICustomerDiscountStrategy, NewCustomerDiscountStartegy>();
+          #endregion
+      ```
+      - DI makes it extremely easy to add new strategies — simply register them.
 ---
 
 ## How the Program Works:
